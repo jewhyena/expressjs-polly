@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model Raster {
+  id              String   @id @default(uuid())
+  name            String   @default(cuid())
+  rasterUrl       String
+  geotiffUrl      String
+  tileTemplate    String
+  leftTopLat      Float
+  leftTopLong     Float
+  rightBottomLat  Float
+  rightBottomLong Float
+  minZoom         Int
+  maxZoom         Int
+  createdAt       DateTime @default(now())
+
+  rastersOnMap RastersOnMap[]
+}
+
+model Map {
+  id        String   @id @default(uuid())
+  name      String   @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  polygons     Polygon[]
+  rastersOnMap RastersOnMap[]
+}
+
+model Polygon {
+  id        String   @id @default(uuid())
+  color     String   @default("#0000FF")
+  geojson   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  mapId String
+  map   Map    @relation(fields: [mapId], references: [id], onDelete: Cascade)
+
+  @@index([mapId])
+}
+
+model RastersOnMap {
+  id String @id @default(uuid())
+
+  rasterId String
+  raster   Raster @relation(fields: [rasterId], references: [id], onDelete: Cascade)
+
+  mapId String
+  map   Map    @relation(fields: [mapId], references: [id], onDelete: Cascade)
+
+  @@index([rasterId])
+  @@index([mapId])
+}
